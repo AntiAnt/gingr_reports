@@ -1,0 +1,14 @@
+black
+certifi
+charset-normalizer
+click
+idna
+isort
+mypy-extensions
+packaging
+pathspec
+platformdirs
+requests
+setuptools
+urllib3
+wheel

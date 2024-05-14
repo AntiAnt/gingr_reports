@@ -1,0 +1,2 @@
+[console_scripts]
+run_monthly_accrual = reports.monthly_accrual_report:main
