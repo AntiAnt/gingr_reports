@@ -33,7 +33,7 @@ class GingerRequests:
         response = requests.post(get_url, headers=headers, data=data)
         if response == 200:
             df = pd.DataFrame(response.json["data"].values())
-            df.to_csv("~/output.csv")
+            df.to_csv("output.csv")
             return df
         else:
             raise Exception(
