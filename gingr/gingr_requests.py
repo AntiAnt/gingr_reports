@@ -1,10 +1,10 @@
 import os
 import pdb
 
+import pandas as pd
 import requests
 
 from constants import GINGR_API_KEY, GINGR_ROOT_APP
-
 
 class GingerRequests:
     def __init__(
@@ -19,21 +19,22 @@ class GingerRequests:
         if self.app_root is None:
             raise ValueError("Root app name is required for Gingr API")
 
-    def get_pos_figures(self, start_date=None, end_date=None):
-        get_url = f"https://{self.app_root}.gingrapp.com/api/v1/list_invoices"
+    def get_pos_figures(self, start_date=None, end_date=None) -> pd.DataFrame:
+        get_url = f"https://{self.app_root}.gingrapp.com/api/v1/reservations"
         headers = {
             "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
         }
         data = {
             "key": self.api_key,
-            "from_date": "2024-04-01",
-            "to_date": "2024-04-30"
+            "start_date": "2024-04-01",
+            "end_date": "2024-04-30"
         }
 
         response = requests.post(get_url, headers=headers, data=data)
-
         if response == 200:
-            return response.json
+            df = pd.DataFrame(response.json["data"].values())
+            df.to_csv("~/output.csv")
+            return df
         else:
             raise Exception(
                 f"Error fetching POS figures: {response.status_code} {response.text}"
