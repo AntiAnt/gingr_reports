@@ -26,15 +26,13 @@ class GingerRequests:
         }
         data = {
             "key": self.api_key,
-            "start_date": "2024-04-01",
-            "end_date": "2024-04-30"
+            "start_date": "2024-02-01",
+            "end_date": "2024-02-28"
         }
 
         response = requests.post(get_url, headers=headers, data=data)
-        if response == 200:
-            df = pd.DataFrame(response.json["data"].values())
-            df.to_csv("output.csv")
-            return df
+        if response.status_code == 200:
+            return pd.DataFrame(response.json()["data"].values())
         else:
             raise Exception(
                 f"Error fetching POS figures: {response.status_code} {response.text}"
