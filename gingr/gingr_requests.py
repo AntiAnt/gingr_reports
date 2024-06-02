@@ -1,5 +1,4 @@
 import os
-import pdb
 import re
 from enum import Enum
 from typing import Dict
@@ -18,6 +17,8 @@ class Package(Enum):
     DAY_5 = 41.4765
     PUPPY_SCHOOL_DAY = 95.715
     BOARDING = 63.85
+    AM_DAYCARE = 32.97
+    PM_DAYCARE = 32.97
 
 
 class Reservation(Enum):
@@ -52,26 +53,39 @@ class GingerRequests:
                 f"This reservation type is currently not supported: {reservation}"
             )
 
-    def get_pos_revenue(self, start_date, end_date) -> pd.DataFrame:
+    def get_pos_revenue(self, start_date: str, end_date: str) -> pd.DataFrame:
         reservations = self._get_reservations(start_date=start_date, end_date=end_date)
+
         # filter out cancelled reservations
         filtered_reservations = reservations[
-            reservations["cancelled_date"].isna()
-            | (reservations["cancelled_date"] == "")
+            (
+                reservations["cancelled_date"].isna()
+                | (reservations["cancelled_date"] == "")
+            )
+            & (
+                reservations["check_out_date"].notna()
+                | (reservations["check_out_date"] != "")
+            )
         ]
-        filtered_reservations.to_csv(os.path.expanduser("~") + "/test.csv")
+
         filtered_reservations["owner_id"] = filtered_reservations["owner"].apply(
             lambda x: x.get("id")
         )
-        filtered_reservations["transaction_id"] = filtered_reservations[
-            "transaction"
-        ].apply(lambda x: x.get("pos_transaction_id") if type(x) is dict else None)
+        filtered_reservations["transaction_id"] = (
+            filtered_reservations["transaction"]
+            .apply(
+                lambda x: x.get("pos_transaction_id") if isinstance(x, dict) else None
+            )
+            .astype("object")
+        )
         filtered_reservations["reservation"] = filtered_reservations[
             "reservation_type"
         ].apply(self._map_to_reservation)
         reduced_reservations = filtered_reservations[
             ["reservation_id", "reservation", "owner_id", "transaction_id"]
         ]
+
+        print(f"Number of filtered reservations: {len(reservations)}")
 
         return self._sum_revenue(reduced_reservations)
 
@@ -98,11 +112,11 @@ class GingerRequests:
 
             if reservation["reservation"] == Reservation.PUPPY_DAY_SCHOOL:
                 revenue += self._get_puppy_school_transaction_revenue(
-                    transaction_id=reservation["transaction_id"]
+                    transaction_id=int(reservation["transaction_id"])
                 )
             elif reservation["reservation"] == Reservation.BOARDING:
                 revenue += self._get_boarding_transaction_revenue(
-                    transaction_id=reservation["transaction_id"]
+                    transaction_id=int(reservation["transaction_id"])
                 )
             elif (
                 reservation["reservation"] == Reservation.FULL_DAY_DAYCARE
@@ -110,13 +124,24 @@ class GingerRequests:
                 or reservation["reservation"] == Reservation.PM_DAYCARE
             ):
                 revenue += self._get_daycare_transaction_revenue(
-                    transaction_id=reservation["transaction_id"]
+                    transaction_id=int(reservation["transaction_id"])
                 )
 
         return revenue
 
     def _get_boarding_transaction_revenue(self, transaction_id: int) -> float:
-        return Package.BOARDING.value
+        transaction = self._get_transaction(transaction_id=transaction_id)
+        total_charges = float(transaction["total"]) + float(transaction["tax_amount"])
+
+        if (
+            transaction["refund_amount"] is not None
+            and float(transaction["refund_amount"]) > 0.0
+        ):
+            total_charges -= float(transaction["refund_amount"]) + float(
+                transaction["tax_refund_amount"]
+            )
+
+        return total_charges
 
     def _get_puppy_school_transaction_revenue(self, transaction_id: int) -> float:
         return Package.PUPPY_SCHOOL_DAY.value
@@ -124,7 +149,7 @@ class GingerRequests:
     def _get_daycare_transaction_revenue(self, transaction_id: int) -> float:
         transaction = self._get_transaction(transaction_id=transaction_id)
 
-        if transaction["total"] == 0.0:
+        if float(transaction["total"]) == 0.0:
             package_pattern = r"(\d{1,2}) \| ([A-Za-z]+) - (\d+) Remaining"
             # assume package
             desc: str = transaction["description"].strip()
@@ -132,9 +157,13 @@ class GingerRequests:
 
             if match is not None:
                 total_units = match.group(1)
-                package_type = match.group(2)
-                remaining = match.group(3)
-                return Package(f"{package_type}_{total_units}").value
+                package_type = (
+                    match.group(2).upper()
+                    if match.group(2).lower() == "day"
+                    else match.group(2).upper() + "Y"
+                )
+
+                return Package[f"{package_type}_{total_units}"].value
 
         total_charges = float(transaction["total"]) + float(transaction["tax_amount"])
 
@@ -148,6 +177,7 @@ class GingerRequests:
 
         if total_charges == 0.0:
             total_charges = DEFAULT_PACkAGE_TOTAL_CHARGE
+
         return total_charges
 
     def _get_transaction(self, transaction_id) -> float:
