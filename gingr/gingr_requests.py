@@ -14,12 +14,12 @@ DEFAULT_PACkAGE_TOTAL_CHARGE = 35.5
 
 class Package(Enum):
     DAY_20 = 35.5
-    DA_10 = 39.563 # how transactions are described for 10 full day packages
-    DA_5 = 41.4765 # Full day Daycare 5 day package
+    DA_10 = 39.563  # how transactions are described for 10 full day packages
+    DA_5 = 41.4765  # Full day Daycare 5 day package
     PUPPY_SCHOOL_DAY = 95.715
     BOARDING = 63.85
     AM_DAYCARE = 32.97
-    DAYCA_10 = 29.99 # AM Half-day daycare package of 10
+    DAYCA_10 = 29.99  # AM Half-day daycare package of 10
     PM_DAYCARE = 32.97
 
 
@@ -60,7 +60,10 @@ class GingerRequests:
         # filter out cancelled reservations
         filtered_reservations = reservations[
             reservations["cancelled_date"].isna()
-                & (reservations["check_out_date"].notna() & (reservations["check_out_date"] != ""))
+            & (
+                reservations["check_out_date"].notna()
+                & (reservations["check_out_date"] != "")
+            )
         ]
 
         filtered_reservations["owner_id"] = filtered_reservations["owner"].apply(
@@ -124,7 +127,9 @@ class GingerRequests:
                     )
 
             except Exception as e:
-                raise Exception(f"Error processing reservation with id: {reservation} . {e}")
+                raise Exception(
+                    f"Error processing reservation with id: {reservation} . {e}"
+                )
         return revenue
 
     def _get_boarding_transaction_revenue(self, transaction_id: int) -> float:

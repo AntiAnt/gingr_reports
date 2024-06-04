@@ -19,6 +19,8 @@ setup(
         "setuptools",
         "urllib3",
         "wheel",
+        "python-quickbooks",
+        "intuit-oauth",
     ],
     entry_points={
         "console_scripts": ["run_monthly_accrual=reports.monthly_accrual_report:main"]
