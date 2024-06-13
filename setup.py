@@ -21,8 +21,10 @@ setup(
         "wheel",
         "python-quickbooks",
         "intuit-oauth",
+        "flask",
+        "pytz",
     ],
     entry_points={
-        "console_scripts": ["run_monthly_accrual=reports.monthly_accrual_report:main"]
+        "console_scripts": ["gingr_app_run=app.app:main"],
     },
 )

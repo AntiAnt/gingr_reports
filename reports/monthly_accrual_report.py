@@ -1,14 +1,17 @@
 import os
 
+from intuitlib.client import AuthClient
+
 from gingr.gingr_requests import GingerRequests
 from intuit.quickbooks_service import QuickbooksServiceManager
 
 
-def main():
-    start_date = "2024-03-01"
-    end_date = "2024-03-31"
+def get_monthly_acrual_report(
+    intuit_auth_client: AuthClient, start_date: str, end_date: str | None = None
+):
+
     gingr = GingerRequests()
-    qb_sm = QuickbooksServiceManager()
+    qb_sm = QuickbooksServiceManager(auth_client=intuit_auth_client)
 
     # rev = gingr.get_pos_revenue(start_date=start_date, end_date=end_date)
     # print(rev)
@@ -17,3 +20,4 @@ def main():
         start_date=start_date, end_date=end_date
     )
     print(expenses)
+    return expenses
