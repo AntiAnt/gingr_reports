@@ -1,4 +1,5 @@
 import os
+from dataclasses import asdict
 
 from flask import Flask, jsonify, redirect, request, send_from_directory, url_for
 from intuitlib.client import AuthClient
@@ -9,12 +10,13 @@ from constants import (
     INTUIT_CLIENT_SECRET,
     MONTHLY_ACCRUAL_REDIRECT_URI,
 )
+from intuit.quickbooks_service import ExpenseReport
 from reports.monthly_accrual_report import get_monthly_acrual_report
 
 from .auth_db_manager import SessionTokens, get_auth_manager
 
-TLS_FULLCHAIN_PATH = '/etc/letsencrypt/live/vertex-apps.com/fullchain.pem'
-TLS_PRIVATE_KEY = '/etc/letsencrypt/live/vertex-apps.com/privkey.pem'
+TLS_FULLCHAIN_PATH = "/etc/letsencrypt/live/vertex-apps.com/fullchain.pem"
+TLS_PRIVATE_KEY = "/etc/letsencrypt/live/vertex-apps.com/privkey.pem"
 
 app = Flask(__name__)
 
@@ -37,7 +39,7 @@ def dashboard():
 
     if session_tokens is None:
         return redirect(url_for("qb_login"))
- 
+
     if session_tokens.is_access_token_expired():
         if session_tokens.is_refresh_token_expired():
             return redirect(url_for("qb_login"))
@@ -123,18 +125,25 @@ def get_monthly_accrual():
         redirect_uri=MONTHLY_ACCRUAL_REDIRECT_URI,
     )
 
-    report = get_monthly_acrual_report(
+    report: ExpenseReport = get_monthly_acrual_report(
         intuit_auth_client=auth_client, start_date=start_date, end_date=end_date
     )
-    return jsonify(report)
+    return jsonify(asdict(report))
 
-# Serve ACME challenge files Only needed for ssl certbot challeneges 
-@app.route('/.well-known/acme-challenge/<filename>')
+
+# Serve ACME challenge files Only needed for ssl certbot challeneges
+@app.route("/.well-known/acme-challenge/<filename>")
 def well_known(filename):
-    return send_from_directory(os.path.join(os.path.expanduser("~"), '.well-known/acme-challenge'), filename)
+    return send_from_directory(
+        os.path.join(os.path.expanduser("~"), ".well-known/acme-challenge"), filename
+    )
+
 
 def main():
     # TODO:  add check for api keys and tokens
     # TODO: read api keys from config file
-    context = (os.path.expanduser('~/my-certs/fullchain.pem'), os.path.expanduser('~/my-certs/privkey.pem'))
-    app.run(debug=True, host='0.0.0.0', port=5000, ssl_context=context)
+    context = (
+        os.path.expanduser("~/my-certs/fullchain.pem"),
+        os.path.expanduser("~/my-certs/privkey.pem"),
+    )
+    app.run(debug=True, host="0.0.0.0", port=5000, ssl_context=context)

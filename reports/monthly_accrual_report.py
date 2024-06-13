@@ -1,10 +1,16 @@
-import os
+from dataclasses import dataclass
 
 from intuitlib.client import AuthClient
 
 from gingr.gingr_requests import GingerRequests
 from intuit.quickbooks_service import QuickbooksServiceManager
 
+@dataclass
+class AccrualReport:
+    revenue: float
+    expenses: float
+    net_profit: float
+    margin: float
 
 def get_monthly_acrual_report(
     intuit_auth_client: AuthClient, start_date: str, end_date: str | None = None
@@ -13,11 +19,15 @@ def get_monthly_acrual_report(
     gingr = GingerRequests()
     qb_sm = QuickbooksServiceManager(auth_client=intuit_auth_client)
 
-    # rev = gingr.get_pos_revenue(start_date=start_date, end_date=end_date)
-    # print(rev)
+    revenue = gingr.get_pos_revenue(start_date=start_date, end_date=end_date)
 
     expenses = qb_sm.get_expenses_by_date_range(
         start_date=start_date, end_date=end_date
     )
-    print(expenses)
-    return expenses
+
+    return AccrualReport(
+        revenue=revenue,
+        expenses=expenses.total_expenses,
+        net_profit=revenue - expenses.total_expenses,
+        margin=((revenue - expenses.total_expenses) / revenue) * 100
+    )
