@@ -12,6 +12,11 @@ from constants import (
 )
 from intuit.quickbooks_service import ExpenseReport
 from reports.monthly_accrual_report import get_monthly_acrual_report
+from reports.reservations import (
+    get_reservations_by_service_by_date_range,
+    get_reservations_by_service_for_the_month,
+    get_reservations_by_service_for_the_week,
+)
 
 from .auth_db_manager import SessionTokens, get_auth_manager
 
@@ -64,12 +69,27 @@ def dashboard():
 
     return """
             <div>
-                <h1>Monthly Accrual Report</h1>
-                <form action="/monthly-accrual-report/get-report" method="post">
-                    Start Date: <input type="date" name="start_date"><br>
-                    End Date: <input type="date" name="end_date"><br>
-                    <input type="submit" value="Generate Report">
-                </form>
+                <h1>Dashboard</h1>
+                <div>
+                    <h2>Monthly Accrual Report</h2>
+                    <form action="/monthly-accrual-report/get-report" method="post">
+                        Start Date: <input type="date" name="start_date"><br>
+                        End Date: <input type="date" name="end_date"><br>
+                        <input type="submit" value="Generate Report">
+                    </form>
+                </div>
+                <div>
+                    <h2>Reservations by Service</h2>
+                    <button onclick=window.location.href="/reservations-by-service/week">Current Week</button>
+                    <h4>OR</h4>
+                    <button onclick=window.location.href="/reservations-by-service/month">Current Month</button>
+                    <h4>OR</h4>
+                    <form action="/reservations-by-service/date_range" method="post">
+                        Start Date: <input type="date" name="start_date"><br>
+                        End Date: <input type="date" name="end_date"><br>
+                        <input type="submit" value="Custom date range(30 days)">
+                    </form>
+                </div>
             <div>
         """
 
@@ -129,6 +149,28 @@ def get_monthly_accrual():
         intuit_auth_client=auth_client, start_date=start_date, end_date=end_date
     )
     return jsonify(asdict(report))
+
+
+@app.route("/reservations-by-service/week", methods={"get"})
+def reservations_by_service_for_the_week():
+    return jsonify(get_reservations_by_service_for_the_week())
+
+
+@app.route("/reservations-by-service/month", methods={"get"})
+def reservations_by_service_for_the_month():
+    return jsonify(get_reservations_by_service_for_the_month())
+
+
+@app.route("/reservations-by-service/date_range", methods={"post"})
+def reservations_by_service_by_date_range():
+    start_date = request.form["start_date"]
+    end_date = request.form["end_date"]
+
+    return jsonify(
+        get_reservations_by_service_by_date_range(
+            start_date=start_date, end_date=end_date
+        )
+    )
 
 
 # Serve ACME challenge files Only needed for ssl certbot challeneges

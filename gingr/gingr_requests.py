@@ -1,5 +1,8 @@
+import json
 import os
 import re
+from dataclasses import dataclass
+from datetime import datetime, timedelta
 from enum import Enum
 from typing import Dict, List
 
@@ -9,6 +12,23 @@ import requests
 from constants import GINGR_API_KEY, GINGR_ROOT_APP
 
 DEFAULT_PACkAGE_TOTAL_CHARGE = 35.5
+
+
+@dataclass
+class Reservations:
+    full_day_daycare_total: int
+    full_day_daycare_daily_avg: float
+    am_daycare_total: int
+    am_daycare_daily_avg: float
+    pm_daycare_total: int
+    pm_daycare_daily_avg: float
+    puppy_day_school_total: int
+    puppy_day_school_daily_avg: float
+    boarding_total: int
+    boarding_daily_avg: float
+    daycare_eval_total: int
+    daycare_eval_daily_avg: float
+    cancelled_total: int
 
 
 class Package(Enum):
@@ -22,7 +42,7 @@ class Package(Enum):
     PM_DAYCARE = 32.97
 
 
-class Reservation(Enum):
+class ReservationCode(Enum):
     FULL_DAY_DAYCARE = "1"
     AM_DAYCARE = "2"
     PM_DAYCARE = "9"
@@ -46,15 +66,91 @@ class GingerRequests:
         if self.app_root is None:
             raise ValueError("Root app name is required for Gingr API")
 
-    def _map_to_reservation(self, reservation: Dict) -> Reservation:
-        if reservation["id"] in Reservation._value2member_map_:
-            return Reservation(reservation["id"])
+    def _get_num_weekdays(self, start_date: datetime, end_date: datetime) -> int:
+        count = 0
+        current_date = start_date
+
+        while current_date <= end_date:
+            print(current_date)
+            if current_date.weekday() < 5:
+                count += 1
+            current_date += timedelta(days=1)
+
+        return count
+
+    def _map_to_reservation(self, reservation: Dict) -> ReservationCode:
+        if reservation["id"] in ReservationCode._value2member_map_:
+            return ReservationCode(reservation["id"])
         else:
             raise ValueError(
                 f"This reservation type is currently not supported: {reservation}"
             )
 
-    def get_pos_revenue(self, start_date: str, end_date: str) -> pd.DataFrame:
+    def get_reservations_by_service(
+        self, start_date: str, end_date: str
+    ) -> Reservations:
+        num_days = (
+            datetime.strptime(end_date, "%Y-%m-%d")
+            - datetime.strptime(start_date, "%Y-%m-%d")
+        ).days + 1
+        num_weekdays = self._get_num_weekdays(
+            start_date=datetime.strptime(start_date, "%Y-%m-%d"),
+            end_date=datetime.strptime(end_date, "%Y-%m-%d"),
+        )
+        res_df = self._get_reservations(start_date=start_date, end_date=end_date)
+
+        df_reservation_type = pd.json_normalize(
+            res_df["reservation_type"].apply(lambda x: x)
+        )
+        res_df = res_df.join(df_reservation_type)
+
+        tot_cancelled_reservations = res_df[res_df["cancelled_date"].notna()].shape[0]
+
+        reservation_total_counts = {
+            "full_day_daycare_total": res_df[
+                res_df["id"] == ReservationCode.FULL_DAY_DAYCARE.value
+            ].shape[0],
+            "am_daycare_total": res_df[
+                res_df["id"] == ReservationCode.AM_DAYCARE.value
+            ].shape[0],
+            "pm_daycare_total": res_df[
+                res_df["id"] == ReservationCode.PM_DAYCARE.value
+            ].shape[0],
+            "puppy_day_school_total": res_df[
+                res_df["id"] == ReservationCode.PUPPY_DAY_SCHOOL.value
+            ].shape[0],
+            "boarding_total": res_df[
+                res_df["id"] == ReservationCode.BOARDING.value
+            ].shape[0],
+            "daycare_eval_total": res_df[
+                res_df["id"] == ReservationCode.DAYCARE_EVAL.value
+            ].shape[0],
+            "cancelled_total": tot_cancelled_reservations,
+        }
+
+        reservaton_averages = {
+            "full_day_daycare_daily_avg": reservation_total_counts[
+                "full_day_daycare_total"
+            ]
+            / num_weekdays,
+            "am_daycare_daily_avg": reservation_total_counts["am_daycare_total"]
+            / num_weekdays,
+            "pm_daycare_daily_avg": reservation_total_counts["pm_daycare_total"]
+            / num_weekdays,
+            "puppy_day_school_daily_avg": reservation_total_counts[
+                "puppy_day_school_total"
+            ]
+            / num_weekdays,
+            "boarding_daily_avg": reservation_total_counts["boarding_total"] / num_days,
+            "daycare_eval_daily_avg": reservation_total_counts["daycare_eval_total"]
+            / num_weekdays,
+        }
+
+        reservation_counts = {**reservation_total_counts, **reservaton_averages}
+
+        return Reservations(**reservation_counts)
+
+    def get_reservations_revenue(self, start_date: str, end_date: str) -> pd.DataFrame:
         reservations = self._get_reservations(start_date=start_date, end_date=end_date)
         # filter out cancelled reservations
         filtered_reservations = reservations[
@@ -108,18 +204,18 @@ class GingerRequests:
                 if reservation["transaction_id"] is None:
                     continue
 
-                if reservation["reservation"] == Reservation.PUPPY_DAY_SCHOOL:
+                if reservation["reservation"] == ReservationCode.PUPPY_DAY_SCHOOL:
                     revenue += self._get_puppy_school_transaction_revenue(
                         transaction_id=int(reservation["transaction_id"])
                     )
-                elif reservation["reservation"] == Reservation.BOARDING:
+                elif reservation["reservation"] == ReservationCode.BOARDING:
                     revenue += self._get_boarding_transaction_revenue(
                         transaction_id=int(reservation["transaction_id"])
                     )
                 elif (
-                    reservation["reservation"] == Reservation.FULL_DAY_DAYCARE
-                    or reservation["reservation"] == Reservation.AM_DAYCARE
-                    or reservation["reservation"] == Reservation.PM_DAYCARE
+                    reservation["reservation"] == ReservationCode.FULL_DAY_DAYCARE
+                    or reservation["reservation"] == ReservationCode.AM_DAYCARE
+                    or reservation["reservation"] == ReservationCode.PM_DAYCARE
                 ):
                     revenue += self._get_daycare_transaction_revenue(
                         transaction_id=int(reservation["transaction_id"])
