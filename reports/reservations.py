@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 import pytz
 
-from gingr.gingr_requests import GingerRequests, Reservations
+from gingr.gingr_reports import GingerReports, Reservations
 
 date_format = "%Y-%m-%d"
 
@@ -30,6 +30,6 @@ def get_reservations_by_service_for_the_month() -> Reservations:
 def get_reservations_by_service_by_date_range(
     start_date: str, end_date: str
 ) -> Reservations:
-    gingr = GingerRequests()
+    gingr = GingerReports()
 
     return gingr.get_reservations_by_service(start_date=start_date, end_date=end_date)

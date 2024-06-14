@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from intuitlib.client import AuthClient
 
-from gingr.gingr_requests import GingerRequests
+from gingr.gingr_reports import GingerReports
 from intuit.quickbooks_service import QuickbooksServiceManager
 
 
@@ -17,7 +17,7 @@ class AccrualReport:
 def get_monthly_acrual_report(
     intuit_auth_client: AuthClient, start_date: str, end_date: str | None = None
 ):
-    gingr = GingerRequests()
+    gingr = GingerReports()
     qb_sm = QuickbooksServiceManager(auth_client=intuit_auth_client)
 
     revenue = gingr.get_reservations_revenue(start_date=start_date, end_date=end_date)

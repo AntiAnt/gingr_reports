@@ -11,6 +11,7 @@ from constants import (
     MONTHLY_ACCRUAL_REDIRECT_URI,
 )
 from intuit.quickbooks_service import ExpenseReport
+from reports.active_owners import get_active_owners_no_reservation_2_months
 from reports.monthly_accrual_report import get_monthly_acrual_report
 from reports.reservations import (
     get_reservations_by_service_by_date_range,
@@ -171,6 +172,11 @@ def reservations_by_service_by_date_range():
             start_date=start_date, end_date=end_date
         )
     )
+
+
+@app.route("/active-owners/no-recent-reservations")
+def get_active_owners_no_recent_reservations():
+    return jsonify(get_active_owners_no_reservation_2_months())
 
 
 # Serve ACME challenge files Only needed for ssl certbot challeneges
