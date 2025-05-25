@@ -68,6 +68,7 @@ class Package(Enum):
     PUPPY_SCHOOL_DAY = 95.715
     BOARDING = 63.85
     AM_DAYCARE = 32.97
+    DAYCAR_20 = 25.4  # AM Half-day daycare package of 20
     DAYCA_10 = 29.99  # AM Half-day daycare package of 10
     PM_DAYCARE = 32.97
 
@@ -78,6 +79,7 @@ class ReservationCode(Enum):
     PM_DAYCARE = "9"
     PUPPY_DAY_SCHOOL = "6"
     BOARDING = "30"
+    BOARDING_STANDARD = "32"
     DAYCARE_EVAL = (
         "7"  # TODO: filter these out earlier as they do not generate revenue ever.
     )
@@ -184,6 +186,7 @@ class GingerReports:
             ].shape[0],
             "boarding_total": res_df[
                 res_df["id"] == ReservationCode.BOARDING.value
+                or ReservationCode.BOARDING_STANDARD.value
             ].shape[0],
             "daycare_eval_total": res_df[
                 res_df["id"] == ReservationCode.DAYCARE_EVAL.value
@@ -217,8 +220,10 @@ class GingerReports:
         """Computes the revenue from reservations for a given date range.
         Range is limited to 30 days
         """
-        reservations = self.requests.get_reservations(
-            start_date=start_date, end_date=end_date
+        reservations = pd.DataFrame(
+            list(
+                self.requests.get_reservations(start_date=start_date, end_date=end_date)
+            )
         )
         # filter out cancelled reservations
         filtered_reservations = reservations[
@@ -273,7 +278,6 @@ class GingerReports:
                     revenue += self._get_daycare_transaction_revenue(
                         transaction_id=int(reservation["transaction_id"])
                     )
-
             except Exception as e:
                 raise Exception(
                     f"Error processing reservation with id: {reservation} . {e}"
@@ -299,13 +303,11 @@ class GingerReports:
 
     def _get_daycare_transaction_revenue(self, transaction_id: int) -> float:
         transaction = self.requests.get_transaction(transaction_id=transaction_id)[0]
-
         if float(transaction["total"]) == 0.0:
             package_pattern = r"(\d{1,2}) \| ([A-Za-z]+) - (\d+) Remaining"
             # assume package
             desc: str = transaction["description"].strip()
             match = re.match(pattern=package_pattern, string=desc)
-
             if match is not None:
                 total_units = match.group(1)
                 package_type = match.group(2).upper()

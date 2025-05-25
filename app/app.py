@@ -41,8 +41,9 @@ def root():
 
 @app.route("/dashboard")
 def dashboard():
-    session_tokens: SessionTokens = intuit_auth_manager.get_latest_session_tokens()
-
+    session_tokens: SessionTokens | None = (
+        intuit_auth_manager.get_latest_session_tokens()
+    )
     if session_tokens is None:
         return redirect(url_for("qb_login"))
 
@@ -194,4 +195,4 @@ def main():
         os.path.expanduser("~/my-certs/fullchain.pem"),
         os.path.expanduser("~/my-certs/privkey.pem"),
     )
-    app.run(debug=True, host="0.0.0.0", port=5000, ssl_context=context)
+    app.run(host="0.0.0.0", debug=True, port=5000)
