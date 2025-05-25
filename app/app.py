@@ -92,6 +92,10 @@ def dashboard():
                         <input type="submit" value="Custom date range(30 days)">
                     </form>
                 </div>
+                <div>
+                    <h2>Active Owners With No Recent Reservations</h2>
+                    <button onclick=window.location.href="/active-owners/no-recent-reservations">Get Owners</button>
+                </div>
             <div>
         """
 
