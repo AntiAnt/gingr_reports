@@ -12,8 +12,19 @@ this is intended to generate profit loss reports on gingr application reports. T
 
 ## Run App
 
-
+#### Flask dev server
 `gingr_app_run`
+
+#### Ngrok HTTP server
+`ngrok http 5000`
+
+#### Frontend devserver
+`cd frontend`
+`yarn`
+`yarn start
+
+
+
 
 
 ## Gingr API

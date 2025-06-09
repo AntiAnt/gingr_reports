@@ -1,7 +1,9 @@
 import os
 from dataclasses import asdict
+import pdb
 
 from flask import Flask, jsonify, redirect, request, send_from_directory, url_for
+from flask_cors import CORS
 from intuitlib.client import AuthClient
 from intuitlib.enums import Scopes
 
@@ -12,7 +14,7 @@ from constants import (
 )
 from intuit.quickbooks_service import ExpenseReport
 from reports.active_owners import get_active_owners_no_reservation_2_months
-from reports.monthly_accrual_report import get_monthly_acrual_report
+from reports.monthly_accrual_report import AccrualReport, get_monthly_acrual_report
 from reports.reservations import (
     get_reservations_by_service_by_date_range,
     get_reservations_by_service_for_the_month,
@@ -25,6 +27,7 @@ TLS_FULLCHAIN_PATH = "/etc/letsencrypt/live/vertex-apps.com/fullchain.pem"
 TLS_PRIVATE_KEY = "/etc/letsencrypt/live/vertex-apps.com/privkey.pem"
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
 intuit_auth_manager = get_auth_manager()
 
@@ -109,6 +112,7 @@ def qb_login():
         redirect_uri=MONTHLY_ACCRUAL_REDIRECT_URI,
     )
     auth_url = auth_client.get_authorization_url(scopes=[Scopes.ACCOUNTING])
+    print(f"AUTH URL {auth_url}")
     return redirect(auth_url)
 
 
@@ -136,9 +140,9 @@ def qb_auth_callback():
 
 @app.route("/monthly-accrual-report/get-report", methods=["post"])
 def get_monthly_accrual():
-    start_date = request.form["start_date"]
-    end_date = request.form["end_date"]
-
+    start_date = request.form["start-date"]
+    end_date = request.form["end-date"]
+    
     latest_session_token = intuit_auth_manager.get_latest_session_tokens()
 
     auth_client = AuthClient(
@@ -151,7 +155,7 @@ def get_monthly_accrual():
         redirect_uri=MONTHLY_ACCRUAL_REDIRECT_URI,
     )
 
-    report: ExpenseReport = get_monthly_acrual_report(
+    report: AccrualReport = get_monthly_acrual_report(
         intuit_auth_client=auth_client, start_date=start_date, end_date=end_date
     )
     return jsonify(asdict(report))

@@ -22,6 +22,7 @@ setup(
         "python-quickbooks",
         "intuit-oauth",
         "flask",
+        "flask-cors",
         "pytz",
     ],
     entry_points={
