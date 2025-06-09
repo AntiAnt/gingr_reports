@@ -8,9 +8,7 @@ this is intended to generate profit loss reports on gingr application reports. T
 
 `pip install -e .`
 
-### AWS ec2
-
-## Run App
+### Run App
 
 #### Flask dev server
 `gingr_app_run`

@@ -69,7 +69,8 @@ class Package(Enum):
     BOARDING = 63.85
     AM_DAYCARE = 32.97
     DAYCAR_20 = 25.4  # AM Half-day daycare package of 20
-    DAYCA_10 = 29.99  # AM Half-day daycare package of 10
+    DAYCA_10 = 28.20 # AM Half-day daycare package of 10
+    DAYCA_5 = 29.6  # AM Half-day daycare package of 5
     PM_DAYCARE = 32.97
 
 

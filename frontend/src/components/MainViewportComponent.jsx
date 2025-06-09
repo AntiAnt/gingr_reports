@@ -11,8 +11,8 @@ const DEFAULT_REPORT = {
 
 const MainViewportComponent = (props) => {
     const [report, setReport] = useState(DEFAULT_REPORT);
-    const [searchStartDate, setSearchStartDate] = useState("2025-05-01");
-    const [searchEndDate, setSearchEndDate] = useState("2025-05-30")
+    const [searchStartDate, setSearchStartDate] = useState("2025-04-01");
+    const [searchEndDate, setSearchEndDate] = useState("2025-04-30")
 
     const fetchAccrualData = async () => {
          try {
