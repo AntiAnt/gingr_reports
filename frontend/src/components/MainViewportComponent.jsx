@@ -37,9 +37,9 @@ const MainViewportComponent = (props) => {
         }
     }
 
-    useEffect(() => {
-       fetchAccrualData();
-    }, [])
+    // useEffect(() => {
+    //    fetchAccrualData();
+    // }, [])
     return(
         <Box sx={{border: "solid", borderColor: "gold"}}>
             <AccrualReportComponent report={report}/>
