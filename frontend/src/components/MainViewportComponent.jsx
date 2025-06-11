@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import { Box, Paper } from "@mui/material";
 import AccrualReportComponent from "./AccrualReportComponent";
 import { useEffect, useState } from "react";
 
@@ -41,10 +41,20 @@ const MainViewportComponent = (props) => {
     //    fetchAccrualData();
     // }, [])
     return(
-        <Box sx={{border: "solid", borderColor: "gold"}}>
-            <AccrualReportComponent report={report}/>
+        <Box>
+            <Paper
+                elevation={3}
+                sx={{
+                    p: 2,
+                    bgcolor: "custom.card",
+                    borderRadius: 1,
+                    textAlign: "center",
+                }}
+            >
+                <AccrualReportComponent report={report}/>
+            </Paper>
         </Box>
-    )
+    );
 }
 
 export default MainViewportComponent;

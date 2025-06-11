@@ -1,5 +1,7 @@
 import { Box, ThemeProvider, Typography, Paper } from "@mui/material";
 import { baseTheme } from "./themes/baseTheme";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import MainViewportComponent from "./components/MainViewportComponent";
 
 function App() {
   const categories = ["Monthly Accrual", "Upload"];
@@ -45,21 +47,12 @@ function App() {
               gap: 2,
             }}
           >
-            {cards.map((card, index) => (
-              <Paper
-                key={index}
-                elevation={3}
-                sx={{
-                  p: 2,
-                  bgcolor: "custom.card",
-                  borderRadius: 1,
-                  textAlign: "center",
-                  boxShadow: "3px 3px 3px black"
-                }}
-              >
-                {card}
-              </Paper>
-            ))}
+            <Router>
+              <Routes>
+                <Route path="/" element={<MainViewportComponent />}>
+                </Route>
+              </Routes>
+            </Router>
           </Box>
         </Box>
       </Box>
