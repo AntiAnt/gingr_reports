@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
+from datetime import date
 
 from intuitlib.client import AuthClient
 
@@ -8,10 +9,19 @@ from intuit.quickbooks_service import QuickbooksServiceManager
 
 @dataclass
 class AccrualReport:
+    id: None | int
+    start_date: str
+    end_date: str
+    requested_on: str
     revenue: float
     expenses: float
     net_profit: float
     margin: float
+
+    def to_dict(self):
+        return asdict(self)
+    
+
 
 
 def get_monthly_acrual_report(
@@ -26,6 +36,9 @@ def get_monthly_acrual_report(
     )
 
     return AccrualReport(
+        start_date=start_date,
+        end_date=end_date,
+        requested_on=date.today().isoformat(),
         revenue=revenue,
         expenses=expenses.total_expenses,
         net_profit=revenue - expenses.total_expenses,
