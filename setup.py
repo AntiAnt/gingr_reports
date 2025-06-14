@@ -25,7 +25,5 @@ setup(
         "flask-cors",
         "pytz",
     ],
-    entry_points={
-        "console_scripts": ["gingr_app_run=app.app:main"],
-    },
+    entry_points={"console_scripts": ["gingr_app_run=app.app:main"],},
 )

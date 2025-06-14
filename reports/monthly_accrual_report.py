@@ -1,5 +1,7 @@
 from dataclasses import asdict, dataclass
 from datetime import date
+import pdb
+from typing import Dict
 
 from intuitlib.client import AuthClient
 
@@ -9,7 +11,6 @@ from intuit.quickbooks_service import QuickbooksServiceManager
 from reports.reports import AccrualReport
 
 accrual_report_manager = get_accrual_reprot_record_manager()
-
 
 
 def get_monthly_acrual_report(
@@ -34,3 +35,17 @@ def get_monthly_acrual_report(
             margin=((revenue - expenses.total_expenses) / revenue) * 100,
         )
     )
+
+
+def get_ytd_historic_monthly_accrual_reports(
+    current_year: int,
+) -> Dict[int, AccrualReport]:
+    # TODO: Validate months for complete num days, leap year, no duplicates
+    historic_monthly_reports = accrual_report_manager.get_all_monthly_reports_by_year(
+        current_year
+    )
+
+    return {
+        date.fromisoformat(report.start_date).month: asdict(report)
+        for report in historic_monthly_reports
+    }

@@ -1,5 +1,3 @@
-
-
 from dataclasses import asdict, dataclass
 
 
@@ -16,4 +14,3 @@ class AccrualReport:
 
     def to_dict(self):
         return asdict(self)
-    

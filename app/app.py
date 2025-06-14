@@ -1,5 +1,6 @@
 import os
 from dataclasses import asdict
+from datetime import date
 
 from flask import Flask, jsonify, redirect, request, url_for
 from flask_cors import CORS
@@ -12,7 +13,7 @@ from constants import (
     MONTHLY_ACCRUAL_REDIRECT_URI,
 )
 from reports.active_owners import get_active_owners_no_reservation_2_months
-from reports.monthly_accrual_report import AccrualReport, get_monthly_acrual_report
+from reports.monthly_accrual_report import AccrualReport, get_monthly_acrual_report, get_ytd_historic_monthly_accrual_reports
 from reports.reservations import (
     get_reservations_by_service_by_date_range,
     get_reservations_by_service_for_the_month,
@@ -137,7 +138,7 @@ def qb_auth_callback():
 def get_monthly_accrual():
     start_date = request.form["start-date"]
     end_date = request.form["end-date"]
-    
+
     latest_session_token = intuit_auth_manager.get_latest_session_tokens()
 
     auth_client = AuthClient(
@@ -154,6 +155,20 @@ def get_monthly_accrual():
         intuit_auth_client=auth_client, start_date=start_date, end_date=end_date
     )
     return jsonify(asdict(report))
+
+
+@app.route("/monthly-accrual-report/ytd", methods=["get"])
+def get_ytd_monthly_accrual_reports():
+    today = date.today()
+    # get year
+    # get month
+    # get day
+    # request service layer return reprots
+    # expect Dict[month, report]
+    reports = get_ytd_historic_monthly_accrual_reports(today.year)
+    # reports[today.month] = get_current_monthly_report(today.month, min(today.day))
+
+    return jsonify(reports)
 
 
 @app.route("/reservations-by-service/week", methods={"get"})
@@ -181,7 +196,6 @@ def reservations_by_service_by_date_range():
 @app.route("/active-owners/no-recent-reservations")
 def get_active_owners_no_recent_reservations():
     return jsonify(get_active_owners_no_reservation_2_months())
-
 
 
 def main():

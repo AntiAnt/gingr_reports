@@ -27,13 +27,16 @@ class AuthDBManager(ABC):
     @abstractmethod
     def put_session_tokens(
         self, access_token: str, refresh_token: str, realm_id: int
-    ) -> int: ...
+    ) -> int:
+        ...
 
     @abstractmethod
-    def get_latest_session_tokens(self) -> SessionTokens | None: ...
+    def get_latest_session_tokens(self) -> SessionTokens | None:
+        ...
 
     @abstractmethod
-    def update_session_tokens_access_token(self, id: int, access_token: str) -> int: ...
+    def update_session_tokens_access_token(self, id: int, access_token: str) -> int:
+        ...
 
 
 class SQLiteAuthManager(AuthDBManager):
