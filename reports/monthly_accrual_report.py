@@ -3,30 +3,18 @@ from datetime import date
 
 from intuitlib.client import AuthClient
 
+from app.accrual_report_db import get_accrual_reprot_record_manager
 from gingr.gingr_reports import GingerReports
 from intuit.quickbooks_service import QuickbooksServiceManager
+from reports.reports import AccrualReport
 
-
-@dataclass
-class AccrualReport:
-    id: None | int
-    start_date: str
-    end_date: str
-    requested_on: str
-    revenue: float
-    expenses: float
-    net_profit: float
-    margin: float
-
-    def to_dict(self):
-        return asdict(self)
-    
+accrual_report_manager = get_accrual_reprot_record_manager()
 
 
 
 def get_monthly_acrual_report(
     intuit_auth_client: AuthClient, start_date: str, end_date: str | None = None
-):
+) -> AccrualReport | None:
     gingr = GingerReports()
     qb_sm = QuickbooksServiceManager(auth_client=intuit_auth_client)
 
@@ -35,12 +23,14 @@ def get_monthly_acrual_report(
         start_date=start_date, end_date=end_date
     )
 
-    return AccrualReport(
-        start_date=start_date,
-        end_date=end_date,
-        requested_on=date.today().isoformat(),
-        revenue=revenue,
-        expenses=expenses.total_expenses,
-        net_profit=revenue - expenses.total_expenses,
-        margin=((revenue - expenses.total_expenses) / revenue) * 100,
+    return accrual_report_manager.insert_report(
+        AccrualReport(
+            start_date=start_date,
+            end_date=end_date,
+            requested_on=date.today().isoformat(),
+            revenue=revenue,
+            expenses=expenses.total_expenses,
+            net_profit=revenue - expenses.total_expenses,
+            margin=((revenue - expenses.total_expenses) / revenue) * 100,
+        )
     )

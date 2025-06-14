@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
 from datetime import date
 import sqlite3
-from typing import Optional
+from typing import Optional, Tuple
 
-from reports.monthly_accrual_report import AccrualReport
+from reports.reports import AccrualReport
+
+
 
 
 class AccrualReportDBManager(ABC):
@@ -12,7 +14,7 @@ class AccrualReportDBManager(ABC):
         pass
 
     @abstractmethod
-    def insert_report(self, report: AccrualReport) -> Optional[int]:
+    def insert_report(self, report: AccrualReport) -> Optional[AccrualReport]:
         pass
 
     @abstractmethod
@@ -23,6 +25,10 @@ class AccrualReportDBManager(ABC):
     def delete_report_by_id(self, id: int) -> Optional[int]:
         pass
 
+    @abstractmethod
+    def _create_new_report_from_row(self, row: Tuple) -> AccrualReport:
+        pass
+
 
 class SQLiteAccrualReportDBManager(AccrualReportDBManager):
     acruall_report_table_schema = """
@@ -31,7 +37,7 @@ class SQLiteAccrualReportDBManager(AccrualReportDBManager):
                 start_date TEXT NOT NULL,
                 end_date TEXT NOT NULL,
                 requested_on TEXT NOT NULL,
-                revenue: REAL NOT NULL,
+                revenue REAL NOT NULL,
                 expenses REAL NOT NULL,
                 net_profit REAL NOT NULL,
                 margin REAL NOT NULL,
@@ -43,9 +49,21 @@ class SQLiteAccrualReportDBManager(AccrualReportDBManager):
         self.database_name = "./accrual_reprot.db"
         conn = sqlite3.connect(self.database_name)
 
-        conn.execute(self.auth_table_schema)
+        conn.execute(self.acruall_report_table_schema)
         conn.commit()
         conn.close()
+
+    def _create_new_report_from_row(self, row: Tuple) -> AccrualReport:
+         return AccrualReport(
+                id=row[0],
+                start_date=row[1],
+                end_date=row[2],
+                requested_on=row[3],
+                revenue=row[4],
+                expenses=row[5],
+                net_profit=row[6],
+                margin=row[7]
+            )
 
 
     def get_accrual_report_by_date_range(self, start_date: date, end_date: date) -> Optional[AccrualReport]:
@@ -60,23 +78,16 @@ class SQLiteAccrualReportDBManager(AccrualReportDBManager):
 
         conn.close()
 
-        if row is not None:
-            return AccrualReport(
-                id=row[0],
-                start_date=row[1],
-                end_date=row[2],
-                requested_on=row[3],
-                revenue=row[4],
-                expenses=row[5],
-                net_profit=row[6],
-                margin=row[7]
-            )
+        if row is None:
+            return
+        
+        return self._create_new_report_from_row(row)
 
 
-    def insert_report(self, report: AccrualReport) -> Optional[int]:
+    def insert_report(self, report: AccrualReport) -> Optional[AccrualReport]:
         conn = sqlite3.connect(self.database_name)
 
-        _id = conn.execute(
+        cursor = conn.execute(
             """INSERT INTO accrual_reports
                 (start_date, end_date, requested_on, revenue, expenses, net_profit, margin)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -90,17 +101,19 @@ class SQLiteAccrualReportDBManager(AccrualReportDBManager):
                 report.net_profit,
                 report.margin
             )
-        ).lastrowid
+        )
 
         conn.commit()
         conn.close()
 
-        if _id is not None:
-            print(f"Accrual Report saved. ID: {_id}")
-        else:
-            print(f"Accrual Report not saved. start data: {report.start_date}, end date: {report.end_date}")
+        saved_report = self.get_accrual_report_by_date_range(start_date=report.start_date, end_date=report.end_date)
 
-        return _id
+        if report is None:
+            print(f"Accrual Report not saved. start data: {report.start_date}, end date: {report.end_date}")
+            return
+   
+        print(f"Accrual Report saved. ID: {saved_report.id}")
+        return saved_report
         
 
     def update_report(self, report: AccrualReport) -> Optional[int]:
@@ -109,3 +122,7 @@ class SQLiteAccrualReportDBManager(AccrualReportDBManager):
 
     def delete_report_by_id(self, id: int) -> Optional[int]:
         raise NotImplementedError()
+
+
+def get_accrual_reprot_record_manager():
+    return SQLiteAccrualReportDBManager()

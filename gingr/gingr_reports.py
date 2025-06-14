@@ -81,6 +81,7 @@ class ReservationCode(Enum):
     PUPPY_DAY_SCHOOL = "6"
     BOARDING = "30"
     BOARDING_STANDARD = "32"
+    PRIVATE_LESSON_SINGLE_SESSION = "28"
     DAYCARE_EVAL = (
         "7"  # TODO: filter these out earlier as they do not generate revenue ever.
     )

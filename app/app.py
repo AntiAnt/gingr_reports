@@ -1,8 +1,7 @@
 import os
 from dataclasses import asdict
-import pdb
 
-from flask import Flask, jsonify, redirect, request, send_from_directory, url_for
+from flask import Flask, jsonify, redirect, request, url_for
 from flask_cors import CORS
 from intuitlib.client import AuthClient
 from intuitlib.enums import Scopes
@@ -12,7 +11,6 @@ from constants import (
     INTUIT_CLIENT_SECRET,
     MONTHLY_ACCRUAL_REDIRECT_URI,
 )
-from intuit.quickbooks_service import ExpenseReport
 from reports.active_owners import get_active_owners_no_reservation_2_months
 from reports.monthly_accrual_report import AccrualReport, get_monthly_acrual_report
 from reports.reservations import (
@@ -22,9 +20,6 @@ from reports.reservations import (
 )
 
 from .auth_db_manager import SessionTokens, get_auth_manager
-
-TLS_FULLCHAIN_PATH = "/etc/letsencrypt/live/vertex-apps.com/fullchain.pem"
-TLS_PRIVATE_KEY = "/etc/letsencrypt/live/vertex-apps.com/privkey.pem"
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
@@ -90,9 +85,9 @@ def dashboard():
                     <button onclick=window.location.href="/reservations-by-service/month">Current Month</button>
                     <h4>OR</h4>
                     <form action="/reservations-by-service/date_range" method="post">
-                        Start Date: <input type="date" name="start_date"><br>
-                        End Date: <input type="date" name="end_date"><br>
-                        <input type="submit" value="Custom date range(30 days)">
+                        Start Date: <input type="date" name="start-date"><br>
+                        End Date: <input type="date" name="end-date"><br>
+                        <input type="submit" value="Custom date range(30 day limit)">
                     </form>
                 </div>
                 <div>
@@ -188,19 +183,9 @@ def get_active_owners_no_recent_reservations():
     return jsonify(get_active_owners_no_reservation_2_months())
 
 
-# Serve ACME challenge files Only needed for ssl certbot challeneges
-@app.route("/.well-known/acme-challenge/<filename>")
-def well_known(filename):
-    return send_from_directory(
-        os.path.join(os.path.expanduser("~"), ".well-known/acme-challenge"), filename
-    )
-
 
 def main():
     # TODO:  add check for api keys and tokens
     # TODO: read api keys from config file
-    context = (
-        os.path.expanduser("~/my-certs/fullchain.pem"),
-        os.path.expanduser("~/my-certs/privkey.pem"),
-    )
+
     app.run(host="0.0.0.0", debug=True, port=5000)
