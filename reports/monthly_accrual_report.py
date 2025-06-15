@@ -1,6 +1,6 @@
+import calendar
 from dataclasses import asdict, dataclass
 from datetime import date
-import pdb
 from typing import Dict
 
 from intuitlib.client import AuthClient
@@ -37,14 +37,37 @@ def get_monthly_acrual_report(
     )
 
 
-def get_ytd_historic_monthly_accrual_reports(
-    current_year: int,
+def generate_ytd_historic_monthly_accrual_reports(
+    year: int,
+    monthly_accrual_reports: Dict[int, AccrualReport],
+    intuit_auth_client: AuthClient,
 ) -> Dict[int, AccrualReport]:
+    reports_not_saved = set(range(1, 13)) - set(monthly_accrual_reports.keys())
+
+    for month in reports_not_saved:
+        last_day = min(calendar.monthrange(year=year, month=month)[-1], 30)
+
+        start_date = f"{year}-{month}-01" if month >= 10 else f"{year}-0{month}-01"
+        end_date = (
+            f"{year}-{month}-{last_day}"
+            if month >= 10
+            else f"{year}-0{month}-{last_day}"
+        )
+
+        monthly_accrual_reports[month] = asdict(
+            get_monthly_acrual_report(
+                start_date=start_date,
+                end_date=end_date,
+                intuit_auth_client=intuit_auth_client,
+            )
+        )
+
+
+def get_ytd_historic_monthly_accrual_reports(year: int) -> Dict[int, AccrualReport]:
     # TODO: Validate months for complete num days, leap year, no duplicates
     historic_monthly_reports = accrual_report_manager.get_all_monthly_reports_by_year(
-        current_year
+        year
     )
-
     return {
         date.fromisoformat(report.start_date).month: asdict(report)
         for report in historic_monthly_reports

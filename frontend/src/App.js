@@ -1,11 +1,12 @@
-import { Box, ThemeProvider, Typography, Paper } from "@mui/material";
+import { Box, ThemeProvider, Typography } from "@mui/material";
 import { baseTheme } from "./themes/baseTheme";
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import MainViewportComponent from "./components/MainViewportComponent";
+import AccrualReportComponent from "./components/AccrualReportComponent";
+import HistoricAccrualReportcomponent from "./components/HistoricAccrualReportcomponent";
 
 function App() {
   const categories = ["Monthly Accrual", "Upload"];
-  const cards = ["Card 1", "Card 2", "Card 3"]; 
 
   return (
     <ThemeProvider theme={baseTheme}>
@@ -50,7 +51,10 @@ function App() {
             <Router>
               <Routes>
                 <Route path="/" element={<MainViewportComponent />}>
+                  <Route path="/ytd-monthly-accrual" element={<AccrualReportComponent />}/>
+                  
                 </Route>
+                <Route path="/historic/ytd-monthly-accrual" element={<HistoricAccrualReportcomponent />}/>
               </Routes>
             </Router>
           </Box>

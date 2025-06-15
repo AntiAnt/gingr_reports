@@ -7,6 +7,7 @@ from reports.reports import AccrualReport
 
 MONTHLY_ACCRUAL_TABLE_NAME = "accrual_reports"
 
+
 class AccrualReportDBManager(ABC):
     @abstractmethod
     def get_accrual_report_by_date_range(
@@ -33,6 +34,7 @@ class AccrualReportDBManager(ABC):
     @abstractmethod
     def get_all_monthly_reports_by_year(self, year: int) -> List[AccrualReport]:
         pass
+
 
 class SQLiteAccrualReportDBManager(AccrualReportDBManager):
     acruall_report_table_schema = """
@@ -139,10 +141,11 @@ class SQLiteAccrualReportDBManager(AccrualReportDBManager):
                 WHERE start_date 
                 LIKE ? || '-%'
             """,
-            (str(year),)
+            (str(year),),
         ).fetchall()
 
         return [self._create_new_report_from_row(row) for row in rows]
+
 
 def get_accrual_reprot_record_manager():
     return SQLiteAccrualReportDBManager()
