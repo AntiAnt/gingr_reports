@@ -1,4 +1,5 @@
 import os
+import pdb
 import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -85,6 +86,8 @@ class ReservationCode(Enum):
     DAYCARE_EVAL = (
         "7"  # TODO: filter these out earlier as they do not generate revenue ever.
     )
+    GROUP_CLASS_BASIC_MANNERS = "11"
+    BOARD_AND_TRAIN = "31"
 
 
 class GingerReports:
@@ -281,6 +284,7 @@ class GingerReports:
                         transaction_id=int(reservation["transaction_id"])
                     )
             except Exception as e:
+                pdb.set_trace()
                 raise Exception(
                     f"Error processing reservation with id: {reservation} . {e}"
                 )
