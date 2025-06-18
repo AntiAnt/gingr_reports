@@ -143,7 +143,7 @@ class SQLiteAccrualReportDBManager(AccrualReportDBManager):
             """,
             (str(year),),
         ).fetchall()
-
+        conn.close()
         return [self._create_new_report_from_row(row) for row in rows]
 
 

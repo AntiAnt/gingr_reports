@@ -8,15 +8,23 @@ from flask_cors import CORS
 from intuitlib.client import AuthClient
 from intuitlib.enums import Scopes
 
-from constants import (INTUIT_CLIENT_ID, INTUIT_CLIENT_SECRET,
-                       MONTHLY_ACCRUAL_REDIRECT_URI)
+from constants import (
+    INTUIT_CLIENT_ID,
+    INTUIT_CLIENT_SECRET,
+    MONTHLY_ACCRUAL_REDIRECT_URI,
+)
 from reports.active_owners import get_active_owners_no_reservation_2_months
 from reports.monthly_accrual_report import (
-    AccrualReport, generate_ytd_historic_monthly_accrual_reports, get_monthly_acrual_report,
-    get_ytd_historic_monthly_accrual_reports)
-from reports.reservations import (get_reservations_by_service_by_date_range,
-                                  get_reservations_by_service_for_the_month,
-                                  get_reservations_by_service_for_the_week)
+    AccrualReport,
+    generate_ytd_historic_monthly_accrual_reports,
+    get_monthly_acrual_report,
+    get_ytd_historic_monthly_accrual_reports,
+)
+from reports.reservations import (
+    get_reservations_by_service_by_date_range,
+    get_reservations_by_service_for_the_month,
+    get_reservations_by_service_for_the_week,
+)
 
 from .auth_db_manager import SessionTokens, get_auth_manager
 
@@ -158,20 +166,40 @@ def get_monthly_accrual():
 @app.route("/monthly-accrual-report/ytd", methods=["get"])
 def get_ytd_monthly_accrual_reports():
     today = date.today()
-    # get year
-    # get month
-    # get day
-    # request service layer return reprots
-    # expect Dict[month, report]
-    reports = get_ytd_historic_monthly_accrual_reports(today.year)
-    # reports[today.month] = get_current_monthly_report(today.month, min(today.day))
-    return jsonify(reports)
+    past_reports = get_ytd_historic_monthly_accrual_reports(today.year)
+
+    latest_session_token = intuit_auth_manager.get_latest_session_tokens()
+
+    auth_client = AuthClient(
+        client_id=os.getenv(INTUIT_CLIENT_ID),
+        client_secret=os.getenv(INTUIT_CLIENT_SECRET),
+        access_token=latest_session_token.access_token,
+        refresh_token=latest_session_token.refresh_token,
+        realm_id=latest_session_token.realm_id,
+        environment="sandbox",
+        redirect_uri=MONTHLY_ACCRUAL_REDIRECT_URI,
+    )
+
+    if len(past_reports) < today.month - 1:
+        generated_past_reports = generate_ytd_historic_monthly_accrual_reports(
+            year=today.year,
+            monthly_accrual_reports=past_reports,
+            intuit_auth_client=auth_client,
+            range_month_end=today.month - 1,
+        )
+        return jsonify(generated_past_reports | past_reports)
+
+    # current_month_report = generate_current_month_accrual_reprort(
+    #     current_date=today, intuit_auth_client=auth_client
+    # )
+
+    return jsonify(past_reports)
 
 
 @app.route("/monthly-accrual-report/ytd/historic", methods=["post"])
 def get_ytd_monthly_accrual_reports_by_year():
     year = int(request.form["year"])
-    if year ==  date.today().year:
+    if year == date.today().year:
         return get_ytd_monthly_accrual_reports()
     
     reports = get_ytd_historic_monthly_accrual_reports(year)
@@ -189,7 +217,13 @@ def get_ytd_monthly_accrual_reports_by_year():
             redirect_uri=MONTHLY_ACCRUAL_REDIRECT_URI,
         )
 
-        return jsonify(generate_ytd_historic_monthly_accrual_reports(year=year,monthly_accrual_reports=reports, intuit_auth_client=auth_client))
+        return jsonify(
+            generate_ytd_historic_monthly_accrual_reports(
+                year=year,
+                monthly_accrual_reports=reports,
+                intuit_auth_client=auth_client,
+            )
+        )
 
     return jsonify(reports)
 

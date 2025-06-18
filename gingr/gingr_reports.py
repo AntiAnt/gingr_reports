@@ -2,7 +2,7 @@ import os
 import pdb
 import re
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from enum import Enum
 from typing import Dict, List, Optional
 
@@ -225,11 +225,29 @@ class GingerReports:
         """Computes the revenue from reservations for a given date range.
         Range is limited to 30 days
         """
-        reservations = pd.DataFrame(
-            list(
-                self.requests.get_reservations(start_date=start_date, end_date=end_date)
+        if date.fromisoformat(end_date).day - date.fromisoformat(start_date).day > 30:
+            thirty_day_date = date.fromisoformat(start_date) + timedelta(days=30)
+            first_30_reservations = list(
+                self.requests.get_reservations(
+                    start_date=start_date, end_date=thirty_day_date
+                )
             )
-        )
+
+            last_day = list(
+                self.requests.get_reservations(
+                    start_date=start_date, end_date=thirty_day_date
+                )
+            )
+
+            reservations = pd.DataFrame(first_30_reservations + last_day)
+        else:
+            reservations = pd.DataFrame(
+                list(
+                    self.requests.get_reservations(
+                        start_date=start_date, end_date=end_date
+                    )
+                )
+            )
         # filter out cancelled reservations
         filtered_reservations = reservations[
             reservations["cancelled_date"].isna()
