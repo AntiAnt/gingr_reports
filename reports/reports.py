@@ -10,6 +10,7 @@ class AccrualReport:
     expenses: float
     net_profit: float
     margin: float
+    number_reservations: int
     id: None | int = None
 
     def to_dict(self):

@@ -18,8 +18,8 @@ def _create_accrual_report(
 ) -> AccrualReport:
     gingr = GingerReports()
     qb_sm = QuickbooksServiceManager(auth_client=intuit_auth_client)
-
-    revenue = gingr.get_reservations_revenue(start_date=start_date, end_date=end_date)
+    print(f"Creating Accrual Report, start date: {start_date}, end date: {end_date}")
+    num_reservations_counted, revenue = gingr.get_reservations_revenue(start_date=start_date, end_date=end_date)
     expenses = qb_sm.get_expenses_by_date_range(
         start_date=start_date, end_date=end_date
     )
@@ -30,6 +30,7 @@ def _create_accrual_report(
         revenue=revenue,
         expenses=expenses.total_expenses,
         net_profit=revenue - expenses.total_expenses,
+        number_reservations=num_reservations_counted,
         margin=((revenue - expenses.total_expenses) / revenue) * 100,
     )
 

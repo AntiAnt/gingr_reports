@@ -49,6 +49,17 @@ const AccrualChartGroupComponent = ({reportSeries}) => {
             >
                 <AccrualReportLineChartComponent series={reportSeries} dataKey="margin"/>
             </Paper>
+            <Paper
+                elevation={3}
+                sx={{
+                    p: 2,
+                    bgcolor: "custom.card",
+                    borderRadius: 1,
+                    textAlign: "center",
+                }}
+            >
+                <AccrualReportLineChartComponent series={reportSeries} dataKey="number_reservations"/>
+            </Paper>
             
         </Box>
     )

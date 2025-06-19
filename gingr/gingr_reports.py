@@ -4,7 +4,7 @@ import re
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 
@@ -221,7 +221,7 @@ class GingerReports:
 
         return Reservations(**reservation_counts)
 
-    def get_reservations_revenue(self, start_date: str, end_date: str) -> pd.DataFrame:
+    def get_reservations_revenue(self, start_date: str, end_date: str) -> Tuple[int, pd.DataFrame]:
         """Computes the revenue from reservations for a given date range.
         Range is limited to 30 days
         """
@@ -274,9 +274,9 @@ class GingerReports:
             ["reservation_id", "reservation", "owner_id", "transaction_id"]
         ]
 
-        print(f"Number of filtered reservations: {len(reservations)}")
+        print(f"Number of filtered reservations: {len(filtered_reservations)}")
 
-        return self._sum_revenue(reduced_reservations)
+        return len(filtered_reservations), self._sum_revenue(reduced_reservations)
 
     def _sum_revenue(self, reservations_df: pd.DataFrame) -> float:
         revenue = 0.0

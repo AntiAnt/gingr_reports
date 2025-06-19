@@ -47,6 +47,7 @@ class SQLiteAccrualReportDBManager(AccrualReportDBManager):
                 expenses REAL NOT NULL,
                 net_profit REAL NOT NULL,
                 margin REAL NOT NULL,
+                number_reservations INTEGER NOT NULL,
                 UNIQUE(start_date, end_date)
             )
         """
@@ -69,6 +70,7 @@ class SQLiteAccrualReportDBManager(AccrualReportDBManager):
             expenses=row[5],
             net_profit=row[6],
             margin=row[7],
+            number_reservations=row[8]
         )
 
     def get_accrual_report_by_date_range(
@@ -92,25 +94,28 @@ class SQLiteAccrualReportDBManager(AccrualReportDBManager):
 
     def insert_report(self, report: AccrualReport) -> Optional[AccrualReport]:
         conn = sqlite3.connect(self.database_name)
+        try:
+            conn.execute(
+                """INSERT INTO accrual_reports
+                    (start_date, end_date, requested_on, revenue, expenses, net_profit, margin, number_reservations)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    report.start_date,
+                    report.end_date,
+                    report.requested_on,
+                    report.revenue,
+                    report.expenses,
+                    report.net_profit,
+                    report.margin,
+                    report.number_reservations
+                ),
+            )
 
-        conn.execute(
-            """INSERT INTO accrual_reports
-                (start_date, end_date, requested_on, revenue, expenses, net_profit, margin)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                report.start_date,
-                report.end_date,
-                report.requested_on,
-                report.revenue,
-                report.expenses,
-                report.net_profit,
-                report.margin,
-            ),
-        )
-
-        conn.commit()
-        conn.close()
+            conn.commit()
+        except sqlite3.DatabaseError as e:
+            conn.close()
+            raise sqlite3.DatabaseError(e.__str__())
 
         saved_report = self.get_accrual_report_by_date_range(
             start_date=report.start_date, end_date=report.end_date
