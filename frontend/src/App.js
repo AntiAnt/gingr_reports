@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import MainViewportComponent from "./components/MainViewportComponent";
 import AccrualReportComponent from "./components/AccrualReportComponent";
 import HistoricAccrualReportcomponent from "./components/HistoricAccrualReportcomponent";
+import MonthlyReportViewComponent from "./views/MonthlyReportViewComponent";
 
 function App() {
   const categories = ["Monthly Accrual", "Upload"];
@@ -52,9 +53,9 @@ function App() {
               <Routes>
                 <Route path="/" element={<MainViewportComponent />}>
                   <Route path="/ytd-monthly-accrual" element={<AccrualReportComponent />}/>
-                  
                 </Route>
                 <Route path="/historic/ytd-monthly-accrual" element={<HistoricAccrualReportcomponent />}/>
+                <Route path="/monthly-report" element={<MonthlyReportViewComponent />} />
               </Routes>
             </Router>
           </Box>

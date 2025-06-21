@@ -7,7 +7,10 @@ const baseTheme = createTheme({
             header: "#2E2E2E",
             main: "#666666",
             card: "#FFFFFF",
-            sidebarText: "#FFFFFF"
+            sidebarText: "#FFFFFF",
+            mintGreen: "#D1E8E2", 
+            cardHeaderText:"#19747E", 
+            cardHeaderBackgroundColor: "#A9D6E5", 
         }
     },
     typography: {
