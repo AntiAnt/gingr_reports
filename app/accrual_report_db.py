@@ -35,6 +35,10 @@ class AccrualReportDBManager(ABC):
     def get_all_monthly_reports_by_year(self, year: int) -> List[AccrualReport]:
         pass
 
+    @abstractmethod
+    def get_report_by_start_and_end_date(self, start_date: str, end_date: str) -> AccrualReport:
+        pass
+
 
 class SQLiteAccrualReportDBManager(AccrualReportDBManager):
     acruall_report_table_schema = """
@@ -48,6 +52,8 @@ class SQLiteAccrualReportDBManager(AccrualReportDBManager):
                 net_profit REAL NOT NULL,
                 margin REAL NOT NULL,
                 number_reservations INTEGER NOT NULL,
+                reservations_report TEXT NOT NULL,
+                expenses_report TEXT NOT NULL,
                 UNIQUE(start_date, end_date)
             )
         """
@@ -70,7 +76,9 @@ class SQLiteAccrualReportDBManager(AccrualReportDBManager):
             expenses=row[5],
             net_profit=row[6],
             margin=row[7],
-            number_reservations=row[8]
+            number_reservations=row[8],
+            reservations_report=row[9],
+            expense_report=row[10],
         )
 
     def get_accrual_report_by_date_range(
@@ -97,8 +105,8 @@ class SQLiteAccrualReportDBManager(AccrualReportDBManager):
         try:
             conn.execute(
                 """INSERT INTO accrual_reports
-                    (start_date, end_date, requested_on, revenue, expenses, net_profit, margin, number_reservations)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    (start_date, end_date, requested_on, revenue, expenses, net_profit, margin, number_reservations, reservations_report, expenses_report)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     report.start_date,
@@ -108,7 +116,9 @@ class SQLiteAccrualReportDBManager(AccrualReportDBManager):
                     report.expenses,
                     report.net_profit,
                     report.margin,
-                    report.number_reservations
+                    report.number_reservations,
+                    report.reservations_report,
+                    report.expense_report,
                 ),
             )
 
@@ -150,6 +160,19 @@ class SQLiteAccrualReportDBManager(AccrualReportDBManager):
         ).fetchall()
         conn.close()
         return [self._create_new_report_from_row(row) for row in rows]
+    
+    def get_report_by_start_and_end_date(self, start_date: str, end_date: str) -> AccrualReport:
+        conn = sqlite3.connect(self.database_name)
+
+        row = conn.execute(
+            f"""SELECT * FROM {MONTHLY_ACCRUAL_TABLE_NAME} WHERE start_date=? AND end_date=?""",
+            (start_date, end_date)
+        ).fetchone()
+
+        if row is None:
+            return row
+        
+        return self._create_new_report_from_row(row=row)
 
 
 def get_accrual_reprot_record_manager():

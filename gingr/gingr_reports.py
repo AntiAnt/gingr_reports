@@ -89,7 +89,19 @@ class ReservationCode(Enum):
     GROUP_CLASS_BASIC_MANNERS = "11"
     BOARD_AND_TRAIN = "31"
 
-
+_reservation_code_title_map = {
+    "FULL_DAY_DAYCARE": "full day daycare",
+    "AM_DAYCARE": "half-day AM daycare",
+    "PM_DAYCARE": "half-day PM daycare",
+    "PUPPY_DAY_SCHOOL": "puppy day school",
+    "BOARDING": "boarding",
+    "BOARDING_STANDARD": "boarding standard",
+    "PRIVATE_LESSON_SINGLE_SESSION": "single private lesson",
+    "DAYCARE_EVAL": "daycare eval",
+    "GROUP_CLASS_BASIC_MANNERS": "basic manners group class",
+    "BOARD_AND_TRAIN": "board and train"
+}
+    
 class GingerReports:
     def __init__(
         self, *, api_key: str | None = None, app_root: str | None = None
@@ -221,10 +233,13 @@ class GingerReports:
 
         return Reservations(**reservation_counts)
 
-    def get_reservations_revenue(self, start_date: str, end_date: str) -> Tuple[int, pd.DataFrame]:
-        """Computes the revenue from reservations for a given date range.
-        Range is limited to 30 days
+    def get_reservations_revenue(
+        self, start_date: str, end_date: str
+    ) -> Tuple[int, pd.DataFrame]:
+        """Computes the revenue from reservations for a given date range. If Range is over 30 days
+            a second request is sent to get the last day of the months reservations.
         """
+
         if date.fromisoformat(end_date).day - date.fromisoformat(start_date).day > 30:
             thirty_day_date = date.fromisoformat(start_date) + timedelta(days=30)
             first_30_reservations = list(
@@ -257,6 +272,8 @@ class GingerReports:
             )
         ]
 
+        # TODO: generate breakdown of reservation
+
         filtered_reservations["owner_id"] = filtered_reservations["owner"].apply(
             lambda x: x.get("id")
         )
@@ -276,37 +293,61 @@ class GingerReports:
 
         print(f"Number of filtered reservations: {len(filtered_reservations)}")
 
-        return len(filtered_reservations), self._sum_revenue(reduced_reservations)
+        return self._sum_revenue(reduced_reservations)
+    
 
-    def _sum_revenue(self, reservations_df: pd.DataFrame) -> float:
+    def _sum_revenue(self, reservations_df: pd.DataFrame) -> Tuple[Dict, float]:
+        reservation_breakdown = {"total_reservations": 0}
         revenue = 0.0
         for _, reservation in reservations_df.iterrows():
-            try:
-                if reservation["transaction_id"] is None:
-                    continue
+            _reservation_type =  _reservation_code_title_map[reservation["reservation"].name]
 
+            if reservation["transaction_id"] is None:
+                # FIXME: if this is to filter reservations that have not completed a transaction it should be move up the call stack to prevent them from making it to this function
+                continue
+            try:
+                _revenue = self._get_daycare_transaction_revenue(
+                    transaction_id=int(reservation["transaction_id"])
+                )
                 if reservation["reservation"] == ReservationCode.PUPPY_DAY_SCHOOL:
-                    revenue += self._get_puppy_school_transaction_revenue(
-                        transaction_id=int(reservation["transaction_id"])
-                    )
+                    if _reservation_type in reservation_breakdown:
+                        reservation_breakdown[_reservation_type]["revenue"] += _revenue
+                        reservation_breakdown[_reservation_type]["count"] += 1
+                    else:
+                        reservation_breakdown[_reservation_type] = {
+                            "revenue": _revenue,
+                            "count": 1
+                        }
                 elif reservation["reservation"] == ReservationCode.BOARDING:
-                    revenue += self._get_boarding_transaction_revenue(
-                        transaction_id=int(reservation["transaction_id"])
-                    )
+                    if _reservation_type in reservation_breakdown:
+                        reservation_breakdown[_reservation_type]["revenue"] += _revenue
+                        reservation_breakdown[_reservation_type]["count"] += 1
+                    else:
+                        reservation_breakdown[_reservation_type] = {
+                            "revenue": _revenue,
+                            "count": 1
+                        }
                 elif (
                     reservation["reservation"] == ReservationCode.FULL_DAY_DAYCARE
                     or reservation["reservation"] == ReservationCode.AM_DAYCARE
                     or reservation["reservation"] == ReservationCode.PM_DAYCARE
                 ):
-                    revenue += self._get_daycare_transaction_revenue(
-                        transaction_id=int(reservation["transaction_id"])
-                    )
+                    if _reservation_type in reservation_breakdown:
+                        reservation_breakdown[_reservation_type]["revenue"] += _revenue
+                        reservation_breakdown[_reservation_type]["count"] += 1
+                    else:
+                        reservation_breakdown[_reservation_type] = {
+                            "revenue": _revenue,
+                            "count": 1
+                        }
+
+                revenue += _revenue
+                reservation_breakdown["total_reservations"] += 1
             except Exception as e:
-                pdb.set_trace()
                 raise Exception(
                     f"Error processing reservation with id: {reservation} . {e}"
                 )
-        return revenue
+        return reservation_breakdown, revenue
 
     def _get_boarding_transaction_revenue(self, transaction_id: int) -> float:
         transaction = self.requests.get_transaction(transaction_id=transaction_id)[0]

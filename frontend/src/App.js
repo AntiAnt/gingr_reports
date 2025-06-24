@@ -56,6 +56,7 @@ function App() {
                 </Route>
                 <Route path="/historic/ytd-monthly-accrual" element={<HistoricAccrualReportcomponent />}/>
                 <Route path="/monthly-report" element={<MonthlyReportViewComponent />} />
+                <Route path="/monthly-accrual-report/get-report" element={<MonthlyReportViewComponent />} />
               </Routes>
             </Router>
           </Box>

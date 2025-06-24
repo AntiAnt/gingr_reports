@@ -18,7 +18,6 @@ const HistoricAccrualReportcomponent = () => {
              const formData = new FormData();
                 formData.append("year", year);
             const response = await fetch(`http://localhost:5000/monthly-accrual-report/ytd/historic`, {
-                
                 method: "POST",
                 body: formData
             });

@@ -2,6 +2,7 @@ import calendar
 from dataclasses import asdict, dataclass
 from datetime import date
 from typing import Dict
+import json
 
 from intuitlib.client import AuthClient
 
@@ -19,7 +20,9 @@ def _create_accrual_report(
     gingr = GingerReports()
     qb_sm = QuickbooksServiceManager(auth_client=intuit_auth_client)
     print(f"Creating Accrual Report, start date: {start_date}, end date: {end_date}")
-    num_reservations_counted, revenue = gingr.get_reservations_revenue(start_date=start_date, end_date=end_date)
+    reservations_breakdown, revenue = gingr.get_reservations_revenue(
+        start_date=start_date, end_date=end_date
+    )
     expenses = qb_sm.get_expenses_by_date_range(
         start_date=start_date, end_date=end_date
     )
@@ -30,19 +33,25 @@ def _create_accrual_report(
         revenue=revenue,
         expenses=expenses.total_expenses,
         net_profit=revenue - expenses.total_expenses,
-        number_reservations=num_reservations_counted,
+        number_reservations=reservations_breakdown["total_reservations"],
         margin=((revenue - expenses.total_expenses) / revenue) * 100,
+        expense_report=json.dumps(expenses.expenses),
+        reservations_report=json.dumps(reservations_breakdown)
     )
 
 
 def get_monthly_acrual_report(
     intuit_auth_client: AuthClient, start_date: str, end_date: str | None = None
 ) -> AccrualReport | None:
-    report = _create_accrual_report(
-        intuit_auth_client=intuit_auth_client, start_date=start_date, end_date=end_date
-    )
-    print(f"saving report, start date:{start_date}, end date:{end_date}")
-    return accrual_report_manager.insert_report(report=report)
+    report = accrual_report_manager.get_report_by_start_and_end_date(start_date=start_date, end_date=end_date)
+    if report is None:
+        report = _create_accrual_report(
+            intuit_auth_client=intuit_auth_client, start_date=start_date, end_date=end_date
+        )
+        print(f"saving report, start date:{start_date}, end date:{end_date}")
+        return accrual_report_manager.insert_report(report=report)
+
+    return report
 
 
 def generate_current_month_accrual_reprort(
@@ -67,7 +76,7 @@ def generate_ytd_historic_monthly_accrual_reports(
     reports_not_saved = set(range(range_month_start, range_month_end + 1)) - set(
         monthly_accrual_reports.keys()
     )
-    
+
     for month in reports_not_saved:
         start_date_iso_str = date(year=year, month=month, day=1).isoformat()
         end_date_iso_str = date(

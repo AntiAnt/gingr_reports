@@ -10,5 +10,5 @@ INTUIT_REALM_ID = "INTUIT_REALM_ID"
 #     "https://vertex-apps.com/monthly-accrual-report/auth_callback"
 # )
 MONTHLY_ACCRUAL_REDIRECT_URI = (
-    "https://1f80-32-220-233-148.ngrok-free.app/monthly-accrual-report/auth_callback"
+    "https://09e0-32-220-233-148.ngrok-free.app/monthly-accrual-report/auth_callback"
 )

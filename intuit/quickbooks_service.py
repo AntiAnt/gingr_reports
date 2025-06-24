@@ -26,7 +26,9 @@ class ExpenseReport:
             if row.get("group") == "Expenses":
                 total_expenses = float(row["Summary"]["ColData"][1]["value"])
                 for _expenses in row["Rows"]["Row"]:
-                    if "Header" in _expenses: # TODO: this is a band aid figure out why this header comes up
+                    if (
+                        "Header" in _expenses
+                    ):  # TODO: this is a band aid figure out why this header comes up
                         _expenses = _expenses["Header"]
                     expenses.append(
                         {

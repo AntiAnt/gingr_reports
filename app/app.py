@@ -1,30 +1,23 @@
+import calendar
 import os
+import pdb
 from dataclasses import asdict
 from datetime import date
-import pdb
 
 from flask import Flask, jsonify, redirect, request, url_for
 from flask_cors import CORS
 from intuitlib.client import AuthClient
 from intuitlib.enums import Scopes
 
-from constants import (
-    INTUIT_CLIENT_ID,
-    INTUIT_CLIENT_SECRET,
-    MONTHLY_ACCRUAL_REDIRECT_URI,
-)
+from constants import (INTUIT_CLIENT_ID, INTUIT_CLIENT_SECRET,
+                       MONTHLY_ACCRUAL_REDIRECT_URI)
 from reports.active_owners import get_active_owners_no_reservation_2_months
 from reports.monthly_accrual_report import (
-    AccrualReport,
-    generate_ytd_historic_monthly_accrual_reports,
-    get_monthly_acrual_report,
-    get_ytd_historic_monthly_accrual_reports,
-)
-from reports.reservations import (
-    get_reservations_by_service_by_date_range,
-    get_reservations_by_service_for_the_month,
-    get_reservations_by_service_for_the_week,
-)
+    AccrualReport, generate_ytd_historic_monthly_accrual_reports,
+    get_monthly_acrual_report, get_ytd_historic_monthly_accrual_reports)
+from reports.reservations import (get_reservations_by_service_by_date_range,
+                                  get_reservations_by_service_for_the_month,
+                                  get_reservations_by_service_for_the_week)
 
 from .auth_db_manager import SessionTokens, get_auth_manager
 
@@ -140,10 +133,15 @@ def qb_auth_callback():
     return redirect("/")
 
 
-@app.route("/monthly-accrual-report/get-report", methods=["post"])
+@app.route("/monthly-accrual-report/get-report", methods=["get"])
 def get_monthly_accrual():
-    start_date = request.form["start-date"]
-    end_date = request.form["end-date"]
+    year = int(request.args.get("year"))
+    month = int(request.args.get("month"))
+
+    start_date_iso_str = date(year=year, month=month, day=1).isoformat()
+    end_date_iso_str = date(
+        year=year, month=month, day=calendar.monthrange(year=year, month=month)[-1]
+    ).isoformat()
 
     latest_session_token = intuit_auth_manager.get_latest_session_tokens()
 
@@ -158,7 +156,7 @@ def get_monthly_accrual():
     )
 
     report: AccrualReport = get_monthly_acrual_report(
-        intuit_auth_client=auth_client, start_date=start_date, end_date=end_date
+        intuit_auth_client=auth_client, start_date=start_date_iso_str, end_date=end_date_iso_str
     )
     return jsonify(asdict(report))
 
@@ -201,7 +199,7 @@ def get_ytd_monthly_accrual_reports_by_year():
     year = int(request.form["year"])
     if year == date.today().year:
         return get_ytd_monthly_accrual_reports()
-    
+
     reports = get_ytd_historic_monthly_accrual_reports(year)
 
     if len(reports) != 12:
