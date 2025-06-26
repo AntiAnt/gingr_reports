@@ -29,7 +29,7 @@ const baseTheme = createTheme({
 })
 
 const cardTheme = {
-    cardBasic : {
+    cardBasic: {
         width:"100%",
         height: "100%",
         borderRadius: "1em",
@@ -37,11 +37,17 @@ const cardTheme = {
         display: "flex",
         justifyContent: "center"
     },
-    cardHeader : {
+    cardHeader: {
         color: "custom.cardHeaderText",
         backgroundColor: "custom.cardHeaderBackgroundColor",
         fontWeight: "bold",
-        fontSize: "1.25em"
+        fontSize: "1.25em",
+        width: "100%",
+        padding: "0.2em"
+    },
+    cardBody: {
+        padding: "2em",
+        textWrap: "pretty"
     }
 }
 

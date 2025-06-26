@@ -18,7 +18,7 @@ function App() {
             width: 250,
             bgcolor: "custom.sidebar",
             color: "#FFFFFF",
-            padding: (theme) => theme.spacing(2), 
+            padding: (theme) => theme.spacing(2),
           }}
         >
           <Typography variant="h6">Categories</Typography>
@@ -37,7 +37,7 @@ function App() {
               textAlign: "center",
             }}
           >
-            <Typography variant="h4">Monthly Accrual Report</Typography>
+            <Typography variant="h4">Accrual Reports</Typography>
           </Box>
           <Box
             sx={{
