@@ -28,4 +28,21 @@ const baseTheme = createTheme({
     },
 })
 
-export {baseTheme}
+const cardTheme = {
+    cardBasic : {
+        width:"100%",
+        height: "100%",
+        borderRadius: "1em",
+        boxShadow: "5px 5px 5px black;",
+        display: "flex",
+        justifyContent: "center"
+    },
+    cardHeader : {
+        color: "custom.cardHeaderText",
+        backgroundColor: "custom.cardHeaderBackgroundColor",
+        fontWeight: "bold",
+        fontSize: "1.25em"
+    }
+}
+
+export {baseTheme, cardTheme}

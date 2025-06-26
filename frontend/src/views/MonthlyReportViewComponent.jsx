@@ -13,23 +13,9 @@ import {
 } from "@mui/material"
 import { useEffect, useState } from "react"
 import { useSearchParams } from "react-router-dom"
+import { cardTheme } from "../themes/baseTheme"
 
-const theme = {
-    cardBasic : {
-        width:"100%",
-        height: "100%",
-        borderRadius: "1em",
-        boxShadow: "5px 5px 5px black;",
-        display: "flex",
-        justifyContent: "center"
-    },
-    cardHeader : {
-        color: "custom.cardHeaderText",
-        backgroundColor: "custom.cardHeaderBackgroundColor",
-        fontWeight: "bold",
-        fontSize: "1.25em"
-    }
-}
+
 
 const MonthlyReportViewComponent = () => {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -39,7 +25,7 @@ const MonthlyReportViewComponent = () => {
     const [expenses, setExpenses] = useState();
     const [reservations, setReservations] = useState()
     const [highlights, setHighlights] = useState()
-    console.log("rendered")
+
     const fetchMonthlyReprortData = async () => {
         const fetchURL = `http://localhost:5000/monthly-accrual-report/get-report?year=${year}&month=${month}`
 
@@ -78,15 +64,15 @@ const MonthlyReportViewComponent = () => {
             {dataReady ?
                 <Grid container spacing={2}>
                     <Grid item size={6} >
-                        <Card sx={theme.cardBasic}>
+                        <Card sx={cardTheme.cardBasic}>
                             <TableContainer>
-                                <Table sx={{ minWidth: 650, overflowY: "scroll" }}  size="medium">
+                                <Table sx={{ minWidth: 650, overflowY: "scroll" }}  size="small">
                                     <TableHead>
                                         <TableRow>
-                                            <TableCell sx={theme.cardHeader} >
+                                            <TableCell sx={cardTheme.cardHeader} >
                                                 {highlights.month > 9 ? highlights.month : `0${highlights.month}`} - {highlights.year}
                                             </TableCell>
-                                            <TableCell sx={theme.cardHeader} align="right">monthly value</TableCell>
+                                            <TableCell sx={cardTheme.cardHeader} align="right">monthly value</TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>                                   
@@ -116,15 +102,15 @@ const MonthlyReportViewComponent = () => {
                         </Card>    
                     </Grid>
                     <Grid item size={6}>
-                        <Card sx={theme.cardBasic}>
+                        <Card sx={cardTheme.cardBasic}>
                             <TableContainer>
-                                <Table sx={{ minWidth: 650, overflowY: "scroll" }}  size="medium">
+                                <Table sx={{ minWidth: 650, overflowY: "scroll" }}  size="small">
                                     <TableHead>
                                         <TableRow>
-                                            <TableCell sx={theme.cardHeader} >
+                                            <TableCell sx={cardTheme.cardHeader} >
                                                 Expenses
                                             </TableCell>
-                                            <TableCell sx={theme.cardHeader} align="right">
+                                            <TableCell sx={cardTheme.cardHeader} align="right">
                                                 total
                                             </TableCell>
                                         </TableRow>
@@ -157,18 +143,18 @@ const MonthlyReportViewComponent = () => {
                             width: "100%"
                         }}
                     >
-                        <Card sx={theme.cardBasic} >
+                        <Card sx={cardTheme.cardBasic} >
                             <TableContainer>
                                 <Table sx={{ minWidth: 650, overflowY: "scroll" }}  size="small">
                                     <TableHead>
                                         <TableRow>
-                                            <TableCell sx={theme.cardHeader} >
+                                            <TableCell sx={cardTheme.cardHeader} >
                                                 Reservations
                                             </TableCell>
-                                            <TableCell sx={theme.cardHeader} align="right">
+                                            <TableCell sx={cardTheme.cardHeader} align="right">
                                                 number of reservations
                                             </TableCell>
-                                            <TableCell sx={theme.cardHeader} align="right">
+                                            <TableCell sx={cardTheme.cardHeader} align="right">
                                                 revenue total
                                             </TableCell>
                                         </TableRow>

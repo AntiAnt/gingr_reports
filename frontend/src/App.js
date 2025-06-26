@@ -5,6 +5,7 @@ import MainViewportComponent from "./components/MainViewportComponent";
 import AccrualReportComponent from "./components/AccrualReportComponent";
 import HistoricAccrualReportcomponent from "./components/HistoricAccrualReportcomponent";
 import MonthlyReportViewComponent from "./views/MonthlyReportViewComponent";
+import DashboardViewComponent from "./views/DasboardViewComponent";
 
 function App() {
   const categories = ["Monthly Accrual", "Upload"];
@@ -51,7 +52,7 @@ function App() {
           >
             <Router>
               <Routes>
-                <Route path="/" element={<MainViewportComponent />}>
+                <Route path="/" element={<DashboardViewComponent />}>
                   <Route path="/ytd-monthly-accrual" element={<AccrualReportComponent />}/>
                 </Route>
                 <Route path="/historic/ytd-monthly-accrual" element={<HistoricAccrualReportcomponent />}/>
