@@ -166,4 +166,4 @@ cython_debug/
 *.pyd
 *.db
 
-frontend/node_modules/
+node_modules
